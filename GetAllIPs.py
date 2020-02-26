@@ -1,7 +1,7 @@
 ##############################################################################
 # MIT License
 #
-# Copyright (c) 2019 William Gaylord
+# Copyright (c) 2020 William Gaylord
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,34 +22,31 @@
 # SOFTWARE.
 #################################################################################
 import re
-import networkx as nx
-import matplotlib.pyplot as plt
 import urllib.request
 
 
-G = nx.Graph()
+
 
 #Regex for the OSLR webpage to grab all nodes and links between them.
-IpRegex = """<tr><td><a href="http:\/\/\d+\.\d+\.\d+\.\d+:8080\/">(\d+\.\d+\.\d+\.\d+)<\/a><\/td><td width="30%">\(<a href="http:\/\/\w+-\d:8080\/">(\w+-\d+)<\/a>\)<\/td><td><a href="http:\/\/\d+\.\d+\.\d+\.\d+:8080\/">(\d+\.\d+\.\d+\.\d+)<\/a><\/td><td width="30\%">\(<a href="http:\/\/\w+-\d:8080\/">(\w+-\d+)<\/a>\)<\/td>"""
+IpRegex = re.compile("""<tr><td><a href="http:\/\/\d+\.\d+\.\d+\.\d+:8080\/">(\d+\.\d+\.\d+\.\d+)<\/a><\/td><td width="30%">\(<a href="http:\/\/(\w+-\d):8080\/">\w+-\d+<\/a>\)<\/td><td><a href="http:\/\/\d+\.\d+\.\d+\.\d+:8080\/">\d+\.\d+\.\d+\.\d+<\/a><\/td><td width="30\%">\(<a href="http:\/\/\w+-\d:8080\/">\w+-\d+<\/a>\)<\/td>""")
 
-while True:
-    G = nx.Graph()
-    html = urllib.request.urlopen("http://localnode:1978/nodes")
-    raw_data = re.findall(IpRegex,html.read().decode("utf8"))
-    nodes = set()
-    edges = []
-    for x in raw_data:
-        nodes.add(x[1])
-        nodes.add(x[3])
-        edges.append((x[1],x[3]))
-        
-    G.add_nodes_from(list(nodes))
-    G.add_edges_from(edges)
-    plt.clf()
-    nx.draw(G,with_labels=True)
-    plt.ion()
-    plt.show()
-    plt.pause(10)
+#Regex for the Mesh Status webpage to grab ip and netmask data.
+IpNodeRegex = re.compile("""<tr><th align=right><nobr>LAN address<\/nobr><\/th><td>(\d+\.\d+\.\d+\.\d+) <small>\/ (\d+)<\/small><br>""")
+
+
+html = urllib.request.urlopen("http://localnode:1978/nodes")
+raw_data = IpRegex.findall(html.read().decode("utf8"))
+node_ips = list(set(raw_data))
+
+print("Node Ip,       Node Name,     Node LAN Address, Netmask")
+
+print(node_ips)
+
+for x in node_ips:
+    html = urllib.request.urlopen("http://"+x[0]+":8080/cgi-bin/status")
+    raw_data = IpNodeRegex.findall(html.read().decode("utf8"))
+    print(x,raw_data)
+
 
 
 
