@@ -28,25 +28,22 @@ import urllib.request
 
 
 #Regex for the OSLR webpage to grab all nodes and links between them.
-IpRegex = re.compile("""(\d+\.\d+\.\d+\.\d+)""")
+IpRegex = re.compile("""<tr><td><a href="http:\/\/\d+\.\d+\.\d+\.\d+:8080\/">(\d+\.\d+\.\d+\.\d+)<\/a><\/td><td width="30%">\(<a href="http:\/\/(\w+-\d):8080\/">\w+-\d+<\/a>\)<\/td><td><a href="http:\/\/\d+\.\d+\.\d+\.\d+:8080\/">\d+\.\d+\.\d+\.\d+<\/a><\/td><td width="30\%">\(<a href="http:\/\/\w+-\d:8080\/">\w+-\d+<\/a>\)<\/td>""")
 
 #Regex for the Mesh Status webpage to grab ip and netmask data.
 IpNodeRegex = re.compile("""<tr><th align=right><nobr>LAN address<\/nobr><\/th><td>(\d+\.\d+\.\d+\.\d+) <small>\/ (\d+)<\/small><br>""")
 
 
-html = urllib.request.urlopen("http://localnode:2006")
-html = html.read().decode("utf8")
-html = html.split("Topology")[1]
-html = html.split("HNA")[0]
-raw_data = IpRegex.findall(html)
+html = urllib.request.urlopen("http://localnode:1978/nodes")
+raw_data = IpRegex.findall(html.read().decode("utf8"))
 node_ips = list(set(raw_data))
 
-print("Node Ip,      Node LAN Address, Netmask")
+print("Node Ip,       Node Name,     Node LAN Address, Netmask")
 
-
+print(node_ips)
 
 for x in node_ips:
-    html = urllib.request.urlopen("http://"+x+":8080/cgi-bin/status")
+    html = urllib.request.urlopen("http://"+x[0]+":8080/cgi-bin/status")
     raw_data = IpNodeRegex.findall(html.read().decode("utf8"))
     print(x,raw_data)
 
